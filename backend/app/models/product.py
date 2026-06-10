@@ -84,6 +84,12 @@ class ProductUpdate(BaseModel):
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
 
+class ProductDeleteRequest(BaseModel):
+    sku: str = Field(..., min_length=2, max_length=50,
+                     description="Unique product SKU code")
+    permanent: bool = Field(default=False)
+
+
 class ProductResponse(ProductBase):
     id: str
     created_at: datetime
