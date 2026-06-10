@@ -2,14 +2,20 @@ from datetime import datetime
 from fastapi import HTTPException, status
 
 from app.database.mongodb import db
-from app.utils.helpers import serialize_mongo_document, normalize_sku
-
+from app.utils.helpers import serialize_mongo_document, normalize_sku, is_valid_object_id
+from app.models.auth import UserRole
 
 products_collection = db.products
 
 
 # CREATE PRODUCT
-async def create_product(product_data: dict):
+async def create_product(product_data: dict, auth_user: dict):
+
+    if auth_user["role"] == UserRole.USER:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You don't have permission to access this resource"
+        )
 
     # Check duplicate SKU
     existing_product = await products_collection.find_one({
@@ -35,20 +41,33 @@ async def create_product(product_data: dict):
 
 
 # GET ALL PRODUCTS
-async def get_all_products():
-
+async def get_all_products(auth_user: dict):
     products = []
 
-    async for product in products_collection.find({"is_active": True}):
-        products.append(
-            serialize_mongo_document(product)
-        )
+    # superadmin can get all products, while admin and users can get active products
+    if auth_user["role"] == UserRole.SUPERADMIN:
+        async for product in products_collection.find():
+            products.append(
+                serialize_mongo_document(product)
+            )
+        return products
 
-    return products
+    elif auth_user["role"] == UserRole.ADMIN or auth_user["role"] == UserRole.USER:
+        async for product in products_collection.find({"is_active": True}):
+            products.append(
+                serialize_mongo_document(product)
+            )
+
+        return products
+
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="You don't have permission to access this resource"
+    )
 
 
 # GET SINGLE PRODUCT
-async def get_product_by_sku(sku: str):
+async def get_product_by_sku(sku: str, auth_user: dict):
     sku = normalize_sku(sku)
 
     if not sku:
@@ -58,8 +77,7 @@ async def get_product_by_sku(sku: str):
         )
 
     product = await products_collection.find_one({
-        "sku": sku,
-        "is_active": True
+        "sku": sku
     })
 
     if not product:
@@ -68,11 +86,31 @@ async def get_product_by_sku(sku: str):
             detail="Product not found"
         )
 
+    if auth_user["role"] == UserRole.SUPERADMIN:
+        return serialize_mongo_document(product)
+
+    elif auth_user["role"] == UserRole.ADMIN or auth_user["role"] == UserRole.USER:
+
+        if product["is_active"]:
+            return serialize_mongo_document(product)
+
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Product is not active"
+        )
+
     return serialize_mongo_document(product)
 
 
 # UPDATE PRODUCT
-async def update_product_by_sku(sku: str, update_data: dict):
+async def update_product_by_sku(sku: str, update_data: dict, auth_user: dict):
+
+    if auth_user["role"] == UserRole.USER:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You don't have permission to access this resource"
+        )
+
     sku = normalize_sku(sku)
 
     if not sku:
@@ -84,8 +122,7 @@ async def update_product_by_sku(sku: str, update_data: dict):
     update_data["updated_at"] = datetime.utcnow()
 
     existing_product = await products_collection.find_one({
-        "sku": sku,
-        "is_active": True
+        "sku": sku
     })
 
     if not existing_product:
@@ -94,20 +131,45 @@ async def update_product_by_sku(sku: str, update_data: dict):
             detail="Product not found or inactive"
         )
 
-    await products_collection.update_one(
-        {"sku": sku},
-        {"$set": update_data}
-    )
+    if auth_user["role"] == UserRole.SUPERADMIN:
+        await products_collection.update_one(
+            {"sku": sku},
+            {"$set": update_data}
+        )
 
-    updated_product = await products_collection.find_one({
-        "sku": sku
-    })
+        updated_product = await products_collection.find_one({
+            "sku": sku
+        })
 
-    return serialize_mongo_document(updated_product)
+        return serialize_mongo_document(updated_product)
+
+    elif auth_user["role"] == UserRole.ADMIN or auth_user["role"] == UserRole.USER:
+        if existing_product["is_active"]:
+            await products_collection.update_one(
+                {"sku": sku},
+                {"$set": update_data}
+            )
+
+            updated_product = await products_collection.find_one({
+                "sku": sku
+            })
+
+            return serialize_mongo_document(updated_product)
+
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Inactive product can not be update"
+        )
 
 
 # DELETE PRODUCT (soft or permanent)
-async def delete_product_by_sku(sku: str, permanent: bool = False):
+async def delete_product_by_sku(sku: str,  permanent: bool, auth_user: dict):
+    if auth_user["role"] == UserRole.USER:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You don't have permission to access this resource"
+        )
+
     sku = normalize_sku(sku)
 
     if not sku:
@@ -116,33 +178,87 @@ async def delete_product_by_sku(sku: str, permanent: bool = False):
             detail="Invalid SKU"
         )
 
-    if permanent:
-        # Permanently delete from database
-        existing_product = await products_collection.find_one({"sku": sku})
+    existing_product = await products_collection.find_one({"sku": sku})
 
-        if not existing_product:
+    if not existing_product:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Product not found"
+        )
+
+    if permanent:
+        if existing_product["is_active"]:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Product not found"
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Delete product permanently only when user is inactive. Please deactivate the user first."
             )
 
         await products_collection.delete_one({"sku": sku})
-    else:
-        # Soft delete - mark as inactive
-        existing_product = await products_collection.find_one({
-            "sku": sku,
-            "is_active": True
-        })
+        return {
+            "success": True,
+            "message": "Product permanently deleted"
+        }
 
-        if not existing_product:
+    else:
+        if not existing_product["is_active"]:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Product not found or inactive"
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Product is already inactive"
             )
 
         await products_collection.update_one(
             {"sku": sku},
-            {"$set": {"is_active": False}}
+            {"$set": {
+                "is_active": False,
+                "updated_at": datetime.utcnow()
+            }
+            })
+
+    return {
+        "success": True,
+        "message": "Product deactivated successfully"
+    }
+
+
+async def search_products_service(
+    sku=None, category=None,
+    supplier_id=None, is_active=True, auth_user=None
+):
+    filters = {}
+
+    if auth_user["role"] != UserRole.SUPERADMIN:
+        # filters["is_active"] = True
+        if not is_active:
+            return {
+                "success": True,
+                "count": 0,
+                "data": []
+            }
+
+        filters["is_active"] = True
+
+    else:
+        if is_active is not None:
+            filters["is_active"] = is_active
+
+    if sku:
+        filters["sku"] = sku
+
+    if category:
+        filters["category"] = category
+
+    if supplier_id:
+        filters["supplier_id"] = supplier_id
+
+    products = []
+
+    async for product in products_collection.find(filters):
+        products.append(
+            serialize_mongo_document(product)
         )
 
-    return True
+    return {
+        "success": True,
+        "count": len(products),
+        "data": products
+    }
