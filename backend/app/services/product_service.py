@@ -187,6 +187,11 @@ async def delete_product_by_sku(sku: str,  permanent: bool, auth_user: dict):
         )
 
     if permanent:
+        if auth_user["role"] == UserRole.ADMIN:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Admin can not delete the product permanently."
+            )
         if existing_product["is_active"]:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -222,13 +227,16 @@ async def delete_product_by_sku(sku: str,  permanent: bool, auth_user: dict):
 
 async def search_products_service(
     sku=None, category=None,
-    supplier_id=None, is_active=True, auth_user=None
+    supplier_id=None, is_active=None, auth_user=None
 ):
     filters = {}
 
     if auth_user["role"] != UserRole.SUPERADMIN:
-        # filters["is_active"] = True
-        if not is_active:
+        if is_active == None:
+            filters["is_active"] = True
+
+        elif not is_active:
+            print(f"[DEBUG] we are here")
             return {
                 "success": True,
                 "count": 0,
@@ -242,7 +250,7 @@ async def search_products_service(
             filters["is_active"] = is_active
 
     if sku:
-        filters["sku"] = sku
+        filters["sku"] = normalize_sku(sku)
 
     if category:
         filters["category"] = category
