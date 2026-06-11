@@ -142,7 +142,7 @@ async def search_products(
     sku: Optional[str] = None,
     category: Optional[str] = None,
     supplier_id: Optional[str] = None,
-    is_active: Optional[bool] = True
+    is_active: Optional[bool] = None
 ):
     return await search_products_service(
         sku=sku, category=category,
