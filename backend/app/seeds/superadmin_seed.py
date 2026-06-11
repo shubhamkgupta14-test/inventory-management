@@ -12,12 +12,13 @@ async def create_default_superadmin():
         "role": UserRole.SUPERADMIN
     })
 
+    username = os.getenv("SUPERADMIN_USERNAME") or "sa-test1"
+    password = os.getenv("SUPERADMIN_PASSWORD") or "admin"
+
     if not existing_superadmin:
         superadmin_data = {
-            "username": os.getenv(
-                "SUPERADMIN_USERNAME"
-            ),
-            "password": hash_password(os.getenv("SUPERADMIN_PASSWORD")),
+            "username": username,
+            "password": hash_password(password),
             "role": UserRole.SUPERADMIN,
             "active": True,
             "created_at": datetime.utcnow(),
