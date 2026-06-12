@@ -16,65 +16,73 @@ from app.services.user_service import (
     delete_user
 )
 
+from app.utils.messages import Messages
+from app.utils.response import (
+    success_response
+)
+
 
 router = APIRouter(
     prefix="/users",
     tags=["Users"]
 )
 
-user_depedency = Annotated[dict, Depends(get_current_user)]
+user_dependency = Annotated[dict, Depends(get_current_user)]
 
 # CREATE USER
 
 
-@router.post("/create-user")
-async def register_user_api(auth_user: user_depedency, user: CreateUserRequest):
+@router.post("/create")
+async def create_user_api(auth_user: user_dependency, user: CreateUserRequest):
 
-    result = await create_user(user.model_dump(), auth_user=auth_user)
+    result = await create_user(auth_user, user.model_dump())
 
-    return {
-        "success": True,
-        "message": "User registered successfully",
-        "data": result
-    }
+    return success_response(
+        message=Messages.USER_CREATED,
+        data=result,
+        status_code=201
+    )
 
 # GET USER BY USERNAME
 
 
-@router.post("/get-user-details")
-async def get_user_api(auth_user: user_depedency, user: GetUserRequest):
+@router.post("/details")
+async def get_user_details_api(auth_user: user_dependency, user: GetUserRequest):
 
-    user = await get_user_by_username(user.username, auth_user)
+    result = await get_user_by_username(auth_user, user.username)
 
-    return {
-        "success": True,
-        "data": user
-    }
+    return success_response(
+        message=Messages.USER_DETAILS_FETCHED,
+        data=result
+    )
 
 # GET ALL USERS
 
 
 @router.get("/")
-async def get_users_api(auth_user: user_depedency):
+async def get_users_api(auth_user: user_dependency):
 
     users = await get_all_users(auth_user)
 
-    return {
-        "success": True,
-        "count": len(users),
-        "data": users
-    }
+    return success_response(
+        message=Messages.USERS_FETCHED,
+        data=users,
+        count=len(users)
+    )
 
 # DELETE USER
 
 
-@router.delete("/delete-user")
-async def delete_user_api(auth_user: user_depedency, user: DeleteUserRequest):
+@router.delete("/delete")
+async def delete_user_api(auth_user: user_dependency, user: DeleteUserRequest):
 
-    result = await delete_user(username=user.username, permanent=user.permanent, auth_user=auth_user)
+    result = await delete_user(auth_user, user.username, user.permanent)
 
-    return {
-        "success": True,
-        "message": "User deleted successfully",
-        "data": result
+    data = {
+        "username": user.username
     }
+
+    return success_response(
+        message=result,
+        data=data
+    )
