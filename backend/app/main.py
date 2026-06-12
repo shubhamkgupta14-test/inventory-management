@@ -4,6 +4,18 @@ from app.routes.products import router as product_router
 from app.routes.users import router as user_router
 from app.routes.auth_route import router as auth_router
 from app.seeds.superadmin_seed import create_default_superadmin
+from fastapi.exceptions import (
+    HTTPException,
+    RequestValidationError
+)
+
+from app.database.indexes import create_indexes
+
+from app.core.exception_handler import (
+    http_exception_handler,
+    global_exception_handler,
+    validation_exception_handler
+)
 
 # STARTUP EVENT
 
@@ -12,7 +24,8 @@ from app.seeds.superadmin_seed import create_default_superadmin
 async def lifespan(app: FastAPI):
     # create_default_superadmin()
     print("Starting up the Inventory Management API...")
-    await create_default_superadmin();
+    await create_indexes()
+    await create_default_superadmin()
     yield
     print("Shutting down the Inventory Management API...")
 
@@ -20,6 +33,21 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Inventory Management API",
     lifespan=lifespan
+)
+
+app.add_exception_handler(
+    HTTPException,
+    http_exception_handler
+)
+
+app.add_exception_handler(
+    RequestValidationError,
+    validation_exception_handler
+)
+
+app.add_exception_handler(
+    Exception,
+    global_exception_handler
 )
 
 

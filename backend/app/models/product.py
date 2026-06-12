@@ -1,10 +1,11 @@
-from pydantic import (BaseModel, Field, field_validator, ConfigDict)
-from typing import Optional, Dict
+from pydantic import (BaseModel, Field, field_validator)
+from typing import Optional
 from datetime import datetime
 
 
 class ProductAttributes(BaseModel):
     color: Optional[str] = None
+    material: Optional[str] = None
     weight: Optional[str] = None
     size: Optional[str] = None
     dimension: Optional[str] = None
@@ -15,6 +16,8 @@ class ProductBase(BaseModel):
                      description="Unique product SKU code")
     name: str = Field(..., min_length=2, max_length=200,
                       description="Product name")
+    description: str = Field(..., min_length=2, max_length=200,
+                             description="Product description")
     category: str = Field(default="General", max_length=100,
                           description="Product category")
     unit_of_measure: str = Field(max_length=20,
@@ -59,6 +62,14 @@ class ProductBase(BaseModel):
             raise ValueError("Product category too short")
         return value
 
+    @field_validator("description")
+    @classmethod
+    def validate_description(cls, value):
+        value = value.strip()
+        if len(value) < 2:
+            raise ValueError("Product description too short")
+        return value
+
     @field_validator("unit_of_measure")
     @classmethod
     def validate_unit_of_measure(cls, value):
@@ -72,6 +83,7 @@ class ProductCreate(ProductBase):
 class ProductUpdate(BaseModel):
     name: Optional[str] = None
     category: Optional[str] = None
+    description: str = None
     attributes: Optional[ProductAttributes] = None
     unit_of_measure: Optional[str] = Field(max_length=20,
                                            description="Unit of measurement", enum=["pcs", "kg", "g", "m", "cm", "ltr", "ml", "other"])
