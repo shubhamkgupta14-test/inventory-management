@@ -3,6 +3,7 @@ import os
 from datetime import datetime
 from app.models.auth import UserRole
 from app.utils.helpers import hash_password
+from app.utils.settings import Settings
 
 users_collection = db.users
 
@@ -12,8 +13,10 @@ async def create_default_superadmin():
         "role": UserRole.SUPERADMIN
     })
 
-    username = os.getenv("SUPERADMIN_USERNAME") or "sa-test1"
-    password = os.getenv("SUPERADMIN_PASSWORD") or "admin"
+    username = os.getenv(
+        "SUPERADMIN_USERNAME") or Settings.DEFAULT_SUPERADMIN_USERNAME
+    password = os.getenv(
+        "SUPERADMIN_PASSWORD") or Settings.DEFAULT_SUPERADMIN_PASSWORD
 
     if not existing_superadmin:
         superadmin_data = {
