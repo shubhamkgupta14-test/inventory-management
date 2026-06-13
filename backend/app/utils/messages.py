@@ -57,3 +57,11 @@ class Messages:
     PURCHASES_FETCHED = "Purchases fetched successfully"
     NO_PURCHASES_FOUND = "No purchases found"
     INVALID_PURCHASE_ID = "Invalid purchase Id"
+
+    # SALES
+    SALE_CREATED = "Sale created successfully"
+    SALES_FETCHED = "Sales fetched successfully"
+    SALE_DETAILS_FETCHED = "Sale details fetched successfully"
+    SALE_NOT_FOUND = "Sale not found"
+    NO_SALES_FOUND = "No sales found"
+    INVALID_SALE_ID = "Invalid sale id"

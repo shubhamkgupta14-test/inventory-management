@@ -123,3 +123,26 @@ def build_purchase_response(purchase: dict):
             "updated_at"
         ).isoformat(),
     }
+
+
+def build_sales_response(sale: dict):
+    return {
+        "sale_id": str(sale.get("_id", "")),
+        "invoice_id": sale.get("invoice_id"),
+        "user_info": sale.get("user_info"),
+        "items": sale.get("items", []),
+
+        "subtotal": sale.get("subtotal", 0),
+        "total_tax": sale.get("total_tax", 0),
+        "total_discount": sale.get("total_discount", 0),
+        "final_total_amount": sale.get("final_total_amount", 0),
+
+        "payment_details": sale.get("payment_details", []),
+
+        "sale_status": sale.get("sale_status", "SOLD"),
+
+        "notes": sale.get("notes"),
+
+        "created_at": sale.get("created_at").isoformat(),
+        "updated_at": sale.get("updated_at").isoformat()
+    }
