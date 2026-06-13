@@ -146,3 +146,24 @@ def build_sales_response(sale: dict):
         "created_at": sale.get("created_at").isoformat(),
         "updated_at": sale.get("updated_at").isoformat()
     }
+
+def build_stock_response(stock: dict):
+    return {
+        "stock_id": str(stock.get("_id")),
+        "sku": stock.get("sku"),
+        "name": stock.get("name"),
+        "quantity": stock.get("quantity"),
+        "avg_price": stock.get("avg_price"),
+        "inventory_value": stock.get(
+            "inventory_value"
+        ),
+        "stock_status": stock.get(
+            "stock_status"
+        ),
+        "created_at": stock.get(
+            "created_at"
+        ).isoformat(),
+        "updated_at": stock.get(
+            "updated_at"
+        ).isoformat()
+    }

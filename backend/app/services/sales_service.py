@@ -4,6 +4,7 @@ from bson import ObjectId
 from app.database.mongodb import db
 from app.models.auth import UserRole
 from app.utils.messages import Messages
+from app.services.stock_service import decrease_stock
 from app.utils.helpers import (
     is_valid_object_id,
     build_sales_response,
@@ -17,6 +18,7 @@ from app.core.exceptions import (
 
 sales_collection = db.sales
 products_collection = db.products
+stocks_collection = db.stocks
 
 
 async def create_sale(auth_user: dict, sale_data: dict):
@@ -113,11 +115,29 @@ async def create_sale(auth_user: dict, sale_data: dict):
         "updated_at": datetime.now(UTC)
     }
 
+    for item in sale_items:
+        stock = await stocks_collection.find_one({
+            "sku": item.get("sku")
+        })
+
+        if not stock:
+            bad_request(Messages.INSUFFICIENT_STOCK)
+
+        if stock.get("quantity", 0) < item.get("quantity"):
+            bad_request(Messages.INSUFFICIENT_STOCK)
+
     result = await sales_collection.insert_one(sale_document)
+
+    for item in sale_items:
+        await decrease_stock(
+            sku=item.get("sku"),
+            quantity=item.get("quantity"),
+        )
 
     created_sale = await sales_collection.find_one({"_id": result.inserted_id})
 
     return build_sales_response(created_sale)
+
 
 async def get_sales(
     auth_user: dict,

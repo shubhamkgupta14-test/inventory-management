@@ -4,6 +4,7 @@ from app.database.mongodb import db
 
 from app.models.auth import UserRole
 from app.models.purchase import PaymentStatus, PurchaseStatus
+from app.services.stock_service import increase_stock
 
 from app.core.exceptions import (
     forbidden,
@@ -160,6 +161,14 @@ async def create_purchase(
     result = await purchase_collection.insert_one(
         purchase_document
     )
+
+    for item in purchase_items:
+        await increase_stock(
+            sku=item.get("sku"),
+            name=item.get("name"),
+            quantity=item.get("quantity"),
+            unit_price=item.get("unit_price")
+        )
 
     created_purchase = await purchase_collection.find_one({
         "_id": result.inserted_id
