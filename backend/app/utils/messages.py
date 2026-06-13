@@ -65,3 +65,11 @@ class Messages:
     SALE_NOT_FOUND = "Sale not found"
     NO_SALES_FOUND = "No sales found"
     INVALID_SALE_ID = "Invalid sale id"
+
+    # STOCKS
+    INSUFFICIENT_STOCK = "Insufficient stock available"
+    STOCKS_FETCHED = "Stocks fetched successfully"
+    STOCK_DETAILS_FETCHED = "Stock details fetched successfully"
+    STOCK_NOT_FOUND = "Stock not found"
+    INVALID_STOCK_STATUS = "Invalid stock status"
+    NO_STOCKS_FOUND = "No stocks found"
