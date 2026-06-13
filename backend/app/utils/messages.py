@@ -11,7 +11,6 @@ class Messages:
     # GENERAL FAILURE
     VALIDATION_FAILED = "Validation failed"
     DATA_NOT_FOUND = "Data not found"
-    INVALID_SORT_FIELD = "Invalid sort field"
 
     # AUTH
     INVALID_CREDENTIALS = "Invalid username or password"
@@ -49,27 +48,4 @@ class Messages:
     PRODUCT_PERMANENT_DELETE_NOT_ALLOWED = "Admin cannot permanently delete products"
     PRODUCT_DEACTIVATION_REQUIRED = "Deactivate the product before permanent deletion"
     INVALID_SKU = "Invalid SKU format"
-    PRODUCT_INACTIVE = "Product is inactive"
-
-    # PURCHASES
-    PURCHASE_CREATED = "Purchase created successfully"
-    PURCHASE_NOT_FOUND = "Purchase not found"
-    PURCHASES_FETCHED = "Purchases fetched successfully"
-    NO_PURCHASES_FOUND = "No purchases found"
-    INVALID_PURCHASE_ID = "Invalid purchase Id"
-
-    # SALES
-    SALE_CREATED = "Sale created successfully"
-    SALES_FETCHED = "Sales fetched successfully"
-    SALE_DETAILS_FETCHED = "Sale details fetched successfully"
-    SALE_NOT_FOUND = "Sale not found"
-    NO_SALES_FOUND = "No sales found"
-    INVALID_SALE_ID = "Invalid sale id"
-
-    # STOCKS
-    INSUFFICIENT_STOCK = "Insufficient stock available"
-    STOCKS_FETCHED = "Stocks fetched successfully"
-    STOCK_DETAILS_FETCHED = "Stock details fetched successfully"
-    STOCK_NOT_FOUND = "Stock not found"
-    INVALID_STOCK_STATUS = "Invalid stock status"
-    NO_STOCKS_FOUND = "No stocks found"
+    PRODUCT_INACTIVE = "Product is already inactive"
