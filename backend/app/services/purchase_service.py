@@ -38,7 +38,6 @@ async def create_purchase(
     total_discount = 0
 
     purchase_items = []
-    print(f"[DEBUG] {purchase_data}")
 
     for item in purchase_data.get("items"):
 
