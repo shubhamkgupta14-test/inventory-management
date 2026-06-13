@@ -1,8 +1,6 @@
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
-from app.routes.products import router as product_router
-from app.routes.users import router as user_router
-from app.routes.auth_route import router as auth_router
+
 from app.seeds.superadmin_seed import create_default_superadmin
 from fastapi.exceptions import (
     HTTPException,
@@ -16,6 +14,11 @@ from app.core.exception_handler import (
     global_exception_handler,
     validation_exception_handler
 )
+
+from app.routes.products import router as product_router
+from app.routes.users import router as user_router
+from app.routes.auth_route import router as auth_router
+from app.routes.purchases import router as purchase_router
 
 # STARTUP EVENT
 
@@ -53,6 +56,7 @@ app.add_exception_handler(
 
 # ROUTERS
 app.include_router(product_router)
+app.include_router(purchase_router)
 app.include_router(user_router)
 app.include_router(auth_router)
 
