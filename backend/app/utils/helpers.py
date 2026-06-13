@@ -1,5 +1,6 @@
 from bson import ObjectId
 from passlib.context import CryptContext
+from math import ceil
 
 
 def serialize_mongo_document(document):
@@ -29,6 +30,14 @@ def normalize_username(username: str):
 def hash_password(password: str):
     pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
     return pwd_context.hash(password)
+
+
+def round_price(value: float):
+    return round(value, 2)
+
+
+def round_final_amount(value: float):
+    return float(ceil(value))
 
 
 def build_user_response(user: dict):
@@ -63,4 +72,54 @@ def build_product_response(product: dict):
         "is_active": product["is_active"],
         "created_at": product["created_at"].isoformat(),
         "updated_at": product["updated_at"].isoformat()
+    }
+
+
+def build_purchase_response(purchase: dict):
+    return {
+        "purchase_id": str(purchase["_id"]),
+        "invoice_id": purchase.get(
+            "invoice_id"
+        ),
+        "supplier_id": purchase.get(
+            "supplier_id"
+        ),
+        "items": purchase.get("items"),
+        "subtotal": purchase.get(
+            "subtotal"
+        ),
+        "total_tax": purchase.get(
+            "total_tax"
+        ),
+        "total_discount": purchase.get(
+            "total_discount"
+        ),
+        "final_total_amount": purchase.get(
+            "final_total_amount"
+        ),
+        "total_paid": purchase.get(
+            "total_paid"
+        ),
+        "remaining_amount": purchase.get(
+            "remaining_amount"
+        ),
+        "payment_status": purchase.get(
+            "payment_status"
+        ),
+        "payment_details": purchase.get(
+            "payment_details"
+        ),
+        "purchase_status": purchase.get(
+            "purchase_status"
+        ),
+        "notes": purchase.get("notes"),
+        "created_by": purchase.get(
+            "created_by"
+        ),
+        "created_at": purchase.get(
+            "created_at"
+        ).isoformat(),
+        "updated_at": purchase.get(
+            "updated_at"
+        ).isoformat(),
     }
