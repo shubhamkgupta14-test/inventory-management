@@ -5,6 +5,9 @@ class Messages:
     FAILURE = "Failure"
     ERROR = "Error"
 
+    # SYSTEM
+    SYSTEM = "system"
+
     # INTERNAL ERROR
     INTERNAL_SERVER_ERROR = "Internal server error"
 
@@ -73,3 +76,6 @@ class Messages:
     STOCK_NOT_FOUND = "Stock not found"
     INVALID_STOCK_STATUS = "Invalid stock status"
     NO_STOCKS_FOUND = "No stocks found"
+
+    # AUDIT_LOG
+    AUDIT_LOGS_FETCHED = "Audit logs fetched successfully"
