@@ -3,9 +3,9 @@ from datetime import datetime, UTC
 from app.database.mongodb import db
 from app.utils.helpers import (
     hash_password,
-    normalize_username,
-    build_user_response
+    normalize_username
 )
+from app.utils.responseBuilder import build_user_response
 
 from app.models.auth import UserRole
 from app.utils.messages import Messages
