@@ -2,7 +2,8 @@ from app.utils.messages import Messages
 from datetime import datetime, UTC
 
 from app.database.mongodb import db
-from app.utils.helpers import normalize_sku, build_product_response
+from app.utils.helpers import normalize_sku
+from app.utils.responseBuilder import build_product_response
 from app.models.auth import UserRole
 from app.core.exceptions import (
     forbidden,

@@ -7,10 +7,10 @@ from app.utils.messages import Messages
 from app.services.stock_service import decrease_stock
 from app.utils.helpers import (
     is_valid_object_id,
-    build_sales_response,
     normalize_sku,
     round_final_amount,
     round_price)
+from app.utils.responseBuilder import build_sales_response
 from app.core.exceptions import (
     forbidden,
     not_found,
