@@ -34,14 +34,6 @@ def hash_password(password: str):
     return pwd_context.hash(password)
 
 
-def round_price(value: float):
-    return round(value, 2)
-
-
-def round_final_amount(value: float):
-    return float(ceil(value))
-
-
 def format_datetime_ist(dt):
     if dt.tzinfo is None:
         dt = dt.replace(tzinfo=timezone.utc)

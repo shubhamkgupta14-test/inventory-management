@@ -14,7 +14,6 @@ class Messages:
     # GENERAL FAILURE
     VALIDATION_FAILED = "Validation failed"
     DATA_NOT_FOUND = "Data not found"
-    INVALID_SORT_FIELD = "Invalid sort field"
 
     # AUTH
     INVALID_CREDENTIALS = "Invalid username or password"
