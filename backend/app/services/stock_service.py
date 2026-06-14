@@ -8,9 +8,9 @@ from app.utils.settings import Settings
 from app.utils.helpers import (
     round_price,
     round_final_amount,
-    build_stock_response,
     normalize_sku
 )
+from app.utils.responseBuilder import build_stock_response
 
 from app.utils.messages import Messages
 from app.models.auth import UserRole
