@@ -6,7 +6,7 @@ from app.database.mongodb import db
 audit_collection = db.audits
 
 
-# CREATE AUDIT
+# CREATE AUDITS
 
 
 async def create_audit_log(
