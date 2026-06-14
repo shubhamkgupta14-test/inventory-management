@@ -1,3 +1,9 @@
+from app.services.audit_service import (
+    create_audit_log
+)
+from app.models.audit import (
+    AuditEvent, AuditModule
+)
 from datetime import datetime, UTC
 from bson import ObjectId
 from app.database.mongodb import db
@@ -22,8 +28,6 @@ from app.utils.helpers import (
 from app.utils.responseBuilder import build_purchase_response
 purchase_collection = db.purchases
 products_collection = db.products
-# suppliers_collection = db.suppliers
-# stocks_collection = db.stocks
 
 
 async def create_purchase(
@@ -112,7 +116,7 @@ async def create_purchase(
     additional_discount = purchase_data.get("additional_discount", 0)
 
     additional_charge_per_unit = round_price((shipping_charges + other_charges -
-                    additional_discount - total_discount) / total_quantity)
+                                              additional_discount - total_discount) / total_quantity)
 
     final_total_amount = round_final_amount(
         subtotal +
@@ -176,6 +180,28 @@ async def create_purchase(
 
     result = await purchase_collection.insert_one(
         purchase_document
+    )
+
+    await create_audit_log(
+        module_name=AuditModule.PURCHASE,
+        event_type=AuditEvent.CREATED,
+        reference_id=purchase_data.get(
+            "invoice_id"
+        ),
+        performed_by=auth_user.get(
+            "username"
+        ),
+        new_data={
+            "invoice_id": purchase_data.get(
+                "invoice_id"
+            ),
+            "supplier_id": supplier_id,
+            "final_total_amount": final_total_amount,
+            "total_items": len(
+                purchase_items
+            ),
+            "payment_status": payment_status
+        }
     )
 
     for item in purchase_items:

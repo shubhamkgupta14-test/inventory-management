@@ -21,6 +21,7 @@ from app.routes.auth_route import router as auth_router
 from app.routes.purchases import router as purchase_router
 from app.routes.sales import router as sale_router
 from app.routes.stocks import router as stock_router
+from app.routes.audit_routes import router as audit_router
 
 # STARTUP EVENT
 
@@ -61,6 +62,7 @@ app.include_router(product_router)
 app.include_router(stock_router)
 app.include_router(purchase_router)
 app.include_router(sale_router)
+app.include_router(audit_router)
 app.include_router(user_router)
 app.include_router(auth_router)
 

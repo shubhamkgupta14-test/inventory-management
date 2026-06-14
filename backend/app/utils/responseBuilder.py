@@ -93,3 +93,18 @@ def build_stock_response(stock: dict):
         "created_at": format_datetime_ist(stock.get("created_at")),
         "updated_at": format_datetime_ist(stock.get("updated_at"))
     }
+
+
+def build_audit_response(audit: dict):
+
+    return {
+        "audit_id": str(audit.get("_id")),
+        "module_name": audit.get("module_name"),
+        "event_type": audit.get("event_type"),
+        "reference_id": audit.get("reference_id"),
+        "sku": audit.get("sku"),
+        "old_data": audit.get("old_data"),
+        "new_data": audit.get("new_data"),
+        "performed_by": audit.get("performed_by"),
+        "created_at": format_datetime_ist(audit.get("created_at"))
+    }

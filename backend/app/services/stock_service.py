@@ -20,6 +20,12 @@ from app.core.exceptions import (
     not_found,
     bad_request
 )
+from app.services.audit_service import (
+    create_audit_log
+)
+from app.models.audit import (
+    AuditEvent, AuditModule
+)
 stocks_collection = db.stocks
 
 
@@ -70,6 +76,23 @@ async def increase_stock(
         await stocks_collection.insert_one(
             stock_data
         )
+
+        await create_audit_log(
+            module_name=AuditModule.STOCK,
+            event_type=AuditEvent.STOCK_INCREASED,
+            sku=sku,
+            performed_by=Messages.SYSTEM,
+            old_data={
+                "quantity": 0,
+                "avg_price": 0,
+                "inventory_value": 0
+            },
+            new_data={
+                "quantity": quantity,
+                "avg_price": avg_price,
+                "inventory_value": inventory_value
+            }
+        )
         return
 
     # UPDATE EXISTING STOCK
@@ -80,6 +103,11 @@ async def increase_stock(
 
     old_avg_price = existing_stock.get(
         "avg_price",
+        0
+    )
+
+    old_inventory_value = existing_stock.get(
+        "inventory_value",
         0
     )
 
@@ -114,6 +142,23 @@ async def increase_stock(
         }
     )
 
+    await create_audit_log(
+        module_name=AuditModule.STOCK,
+        event_type=AuditEvent.STOCK_INCREASED,
+        sku=sku,
+        performed_by=Messages.SYSTEM,
+        old_data={
+            "quantity": old_quantity,
+            "avg_price": old_avg_price,
+            "inventory_value": old_inventory_value
+        },
+        new_data={
+            "quantity": new_quantity,
+            "avg_price": avg_price,
+            "inventory_value": inventory_value
+        }
+    )
+
 
 async def decrease_stock(
     sku: str,
@@ -141,6 +186,11 @@ async def decrease_stock(
         "avg_price",
         0
     )
+    
+    old_inventory_value = existing_stock.get(
+        "inventory_value",
+        0
+    )
 
     inventory_value = round_final_amount(
         new_quantity * avg_price
@@ -159,6 +209,23 @@ async def decrease_stock(
                 ),
                 "updated_at": datetime.now(UTC)
             }
+        }
+    )
+
+    await create_audit_log(
+        module_name=AuditModule.STOCK,
+        event_type=AuditEvent.STOCK_DECREASED,
+        sku=sku,
+        performed_by=Messages.SYSTEM,
+        old_data={
+            "quantity": current_quantity,
+            "avg_price": avg_price,
+            "inventory_value": old_inventory_value
+        },
+        new_data={
+            "quantity": new_quantity,
+            "avg_price": avg_price,
+            "inventory_value": inventory_value
         }
     )
 

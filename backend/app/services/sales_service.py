@@ -15,6 +15,12 @@ from app.core.exceptions import (
     forbidden,
     not_found,
     bad_request)
+from app.services.audit_service import (
+    create_audit_log
+)
+from app.models.audit import (
+    AuditEvent, AuditModule
+)
 
 sales_collection = db.sales
 products_collection = db.products
@@ -127,6 +133,26 @@ async def create_sale(auth_user: dict, sale_data: dict):
             bad_request(Messages.INSUFFICIENT_STOCK)
 
     result = await sales_collection.insert_one(sale_document)
+
+    await create_audit_log(
+        module_name=AuditModule.SALES,
+        event_type=AuditEvent.CREATED,
+        reference_id=sale_data.get(
+            "invoice_id"
+        ),
+        performed_by=auth_user.get(
+            "username"
+        ),
+        new_data={
+            "invoice_id": sale_data.get(
+                "invoice_id"
+            ),
+            "final_total_amount": final_total_amount,
+            "total_items": len(
+                sale_items
+            )
+        }
+    )
 
     for item in sale_items:
         await decrease_stock(
