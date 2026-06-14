@@ -1,3 +1,9 @@
+from app.services.audit_service import (
+    create_audit_log
+)
+from app.models.audit import (
+    AuditEvent, AuditModule
+)
 from datetime import datetime, UTC
 from bson import ObjectId
 from app.database.mongodb import db
@@ -15,15 +21,13 @@ from app.core.exceptions import (
 from app.utils.messages import Messages
 from app.utils.helpers import (
     is_valid_object_id,
-    build_purchase_response,
     normalize_sku,
     round_price,
     round_final_amount
 )
+from app.utils.responseBuilder import build_purchase_response
 purchase_collection = db.purchases
 products_collection = db.products
-# suppliers_collection = db.suppliers
-# stocks_collection = db.stocks
 
 
 async def create_purchase(
@@ -37,6 +41,7 @@ async def create_purchase(
     subtotal = 0
     total_tax = 0
     total_discount = 0
+    total_quantity: int = 0
 
     purchase_items = []
 
@@ -90,6 +95,7 @@ async def create_purchase(
         subtotal += round_price(item_subtotal)
         total_tax += round_price(tax_amount)
         total_discount += round_price(discount_amount)
+        total_quantity += quantity
 
         purchase_items.append({
             "sku": sku,
@@ -104,10 +110,19 @@ async def create_purchase(
             "total_price": total_price
         })
 
+    shipping_charges = round_price(purchase_data.get("shipping_charges", 0))
+    other_charges = round_price(purchase_data.get("other_charges", 0))
+
+    additional_discount = purchase_data.get("additional_discount", 0)
+
+    additional_charge_per_unit = round_price((shipping_charges + other_charges -
+                                              additional_discount - total_discount) / total_quantity)
+
     final_total_amount = round_final_amount(
         subtotal +
         total_tax -
-        total_discount
+        total_discount -
+        additional_discount
     )
 
     total_paid = sum(
@@ -137,9 +152,11 @@ async def create_purchase(
         "invoice_id": purchase_data.get("invoice_id"),
         "supplier_id": supplier_id,
         "items": purchase_items,
+        "total_quantity": total_quantity,
         "subtotal": subtotal,
         "total_tax": total_tax,
-        "total_discount": total_discount,
+        "additional_discount": additional_discount,
+        "total_discount": total_discount + additional_discount,
         "final_total_amount": final_total_amount,
         "total_paid": total_paid,
         "remaining_amount": remaining_amount,
@@ -150,6 +167,9 @@ async def create_purchase(
         ),
         "purchase_status": PurchaseStatus.COMPLETED,
         "notes": purchase_data.get("notes"),
+        "shipping_charges": shipping_charges,
+        "other_charges": other_charges,
+        "additional_charge_per_unit": additional_charge_per_unit,
         "created_by": auth_user.get(
             "username"
         ),
@@ -162,12 +182,34 @@ async def create_purchase(
         purchase_document
     )
 
+    await create_audit_log(
+        module_name=AuditModule.PURCHASE,
+        event_type=AuditEvent.CREATED,
+        reference_id=purchase_data.get(
+            "invoice_id"
+        ),
+        performed_by=auth_user.get(
+            "username"
+        ),
+        new_data={
+            "invoice_id": purchase_data.get(
+                "invoice_id"
+            ),
+            "supplier_id": supplier_id,
+            "final_total_amount": final_total_amount,
+            "total_items": len(
+                purchase_items
+            ),
+            "payment_status": payment_status
+        }
+    )
+
     for item in purchase_items:
         await increase_stock(
             sku=item.get("sku"),
             name=item.get("name"),
             quantity=item.get("quantity"),
-            unit_price=item.get("unit_price")
+            unit_price=item.get("unit_price") + additional_charge_per_unit
         )
 
     created_purchase = await purchase_collection.find_one({

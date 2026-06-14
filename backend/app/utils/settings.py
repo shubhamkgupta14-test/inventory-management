@@ -1,3 +1,6 @@
+from zoneinfo import ZoneInfo
+
+
 class Settings:
     ACCESS_TOKEN_EXPIRE_MINUTES = 30
     TOKEN_TYPE = "bearer"
@@ -9,3 +12,4 @@ class Settings:
     ALGORITHM = 'HS256'
     LOW_STOCK_CHECK = 5
     OUT_OF_STOCK_CHECK = 0
+    IST = ZoneInfo("Asia/Kolkata")

@@ -43,5 +43,11 @@ class CreatePurchaseRequest(BaseModel):
     invoice_id: str = Field(..., min_length=3,
                             description="Purchase invoice number")
     items: List[PurchaseItem]
+    additional_discount: float = Field(
+        default=0, ge=0, description="Any additional discount on total bill")
+    shipping_charges: float = Field(
+        default=0, ge=0, description="Shipping charges")
+    other_charges: float = Field(
+        default=0, ge=0, description="Any Miscellaneous charges")
     payment_details: List[PaymentDetail]
     notes: Optional[str] = None
